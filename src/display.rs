@@ -140,7 +140,7 @@ impl Display {
     });
 
     // generate the list of instances
-    let instances = Display::gen_instances();
+    let instances = Display::gen_instances(&pixels);
     // and make an instance buffer
     let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
       label: Some("Instance Buffer"),
@@ -154,7 +154,7 @@ impl Display {
   }
 
   // generate a list of instances of the pixels to render
-  pub fn gen_instances() -> [Instance; WIDTH * HEIGHT] {
+  pub fn gen_instances(pixels: &[[bool; WIDTH]; HEIGHT]) -> [Instance; WIDTH * HEIGHT] {
 
     let mut instances: [Instance; WIDTH * HEIGHT] = [Instance {pos: [0, 0], on: 0}; WIDTH * HEIGHT];
 
@@ -166,7 +166,7 @@ impl Display {
         // create the instance
         instances[y * WIDTH + x] = Instance {
           pos: [x as u32, y as u32],
-          on: 0
+          on: pixels[y][x] as u32
         }
 
       }
@@ -174,6 +174,16 @@ impl Display {
     };
 
     return instances;
+
+  }
+
+  // updates the instance buffer for the new data present
+  pub fn update(&mut self) {
+
+    // generate a new list of instances based on the updated data
+    let new_instances = Display::gen_instances(&self.pixels);
+    // and write it to the buffer
+    self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::bytes_of(&new_instances));
 
   }
 

@@ -1,6 +1,6 @@
 struct VertexOutput {
   @builtin(position) pos: vec4<f32>,
-  @location(0) on: u32
+  @location(0) on: u32,
 };
 
 @vertex
@@ -23,6 +23,7 @@ fn vs_main(@location(0) vpos: vec2<f32>, @location(1) ipos: vec2<u32>, @location
   var y = ybase + vpos[1] * theight;
 
   output.pos = vec4<f32>(x, y, 0.0, 1.0);
+  output.on = on;
 
   return output;
 }

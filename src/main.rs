@@ -32,7 +32,13 @@ async fn run() {
     match event {
 
       // render the window!
-      Event::RedrawRequested(..) => display.render(),
+      Event::RedrawRequested(..) => {
+
+        // update the visual data and then render
+        display.update();
+        display.render();
+
+      },
 
       // close the window
       Event::WindowEvent { 
