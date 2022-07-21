@@ -10,7 +10,18 @@ pub struct Cpu {
   pub display: Display,
 
   // 4096 bytes of memory, each byte as a u8
-  pub memory: [u8; 4096]
+  pub memory: [u8; 4096],
+  // 16 8-bit registers
+  pub v: [u8; 16],
+  // address in memory
+  pub memory_addr: u16,
+  // address in the program instructions
+  pub program_addr: u16,
+  // timers for keeping track of delay & sound length
+  pub delay_timer: u16,
+  pub sound_timer: u16,
+
+  pub stack: Vec<u16>
 
 }
 
@@ -26,8 +37,20 @@ impl Cpu {
 
     // create the memory
     let mut memory: [u8; 4096] = [0; 4096];
+    let mut v: [u8; 16] = [0; 16];
+    let mut memory_addr: u16 = 0;
 
-    return Cpu { display, memory };
+    // and the timers
+    let mut delay_timer: u16 = 0;
+    let mut sound_timer: u16 = 0;
+
+    // address in the program
+    let mut program_addr: u16 = 0;
+
+    let mut stack: Vec<u16> = vec![];
+
+
+    return Cpu { display, memory, memory_addr, program_addr, v, delay_timer, sound_timer, stack };
 
   }
 
