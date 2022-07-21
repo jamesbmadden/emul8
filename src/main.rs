@@ -2,6 +2,7 @@ mod display;
 
 use winit::{
   event::{Event, WindowEvent},
+  dpi::LogicalSize,
   event_loop::{ControlFlow, EventLoop},
   window::WindowBuilder,
 };
@@ -14,7 +15,7 @@ async fn run() {
 
   // define the window's properties
   let event_loop = EventLoop::new();
-  let window = WindowBuilder::new().with_title("emul8 😏").build(&event_loop).unwrap();
+  let window = WindowBuilder::new().with_title("emul8 😏").with_inner_size(LogicalSize::new(600, 300)).build(&event_loop).unwrap();
 
   // create an instance of the display for rendering 
   let mut display = display::Display::new(&window).await;
