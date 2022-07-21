@@ -1,4 +1,5 @@
 mod display;
+mod cpu;
 
 use winit::{
   event::{Event, WindowEvent},
@@ -18,10 +19,10 @@ async fn run() {
   let window = WindowBuilder::new().with_title("emul8 😏").with_inner_size(LogicalSize::new(600, 300)).build(&event_loop).unwrap();
 
   // create an instance of the display for rendering 
-  let mut display = display::Display::new(&window).await;
+  let mut cpu = cpu::Cpu::new(&window).await;
   // set some pixels to true for testing
-  display.set_pixel(5, 21);
-  display.set_pixel(49, 3);
+  cpu.display.set_pixel(5, 21);
+  cpu.display.set_pixel(49, 3);
 
   // open up the window!
   event_loop.run(move | event, _, control_flow | {
@@ -36,8 +37,8 @@ async fn run() {
       Event::RedrawRequested(..) => {
 
         // update the visual data and then render
-        display.update();
-        display.render();
+        cpu.display.update();
+        cpu.display.render();
 
       },
 
