@@ -1,5 +1,6 @@
 mod display;
 mod cpu;
+mod keyboard;
 
 use winit::{
   event::{Event, WindowEvent},
