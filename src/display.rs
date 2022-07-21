@@ -14,13 +14,13 @@ const HEIGHT: usize = 32;
 // basically we're gonna have a bunch of instances of this to fill the screen :)
 const PIXEL_VERTICES: [f32; 12] = [
   // first triangle: top left -> bottom left -> top right
-  0.0,  1.0,
+  0.0, 1.0,
   0.0, 0.0,
-  1.0,  1.0,
+  1.0, 1.0,
   // second triangle: bottom left -> bottom right -> top right
   0.0, 0.0,
   1.0, 0.0,
-  1.0,  1.0
+  1.0, 1.0
 ];
 
 /**
