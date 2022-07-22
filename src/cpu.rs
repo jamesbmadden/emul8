@@ -34,8 +34,8 @@ impl Cpu {
   pub async fn new(window: &winit::window::Window) -> Self {
 
     // create an instance of display
-    let mut display = Display::new(window).await;
-    let mut keyboard = Keyboard::new();
+    let display = Display::new(window).await;
+    let keyboard = Keyboard::new();
 
     // create the memory
     let mut memory: [u8; 4096] = [0; 4096];
