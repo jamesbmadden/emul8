@@ -69,14 +69,17 @@ async fn run() {
         ..
       } => {
 
-        // connect with the keyboard struct
-        if state == ElementState::Pressed {
-          // key is pressed, run on_key_down
-          cpu.keyboard.on_key_down(virtual_keycode.unwrap());
-        }
-        else if state == ElementState::Released {
-          // key is released, run on_key_up
-          cpu.keyboard.on_key_up(virtual_keycode.unwrap());
+        // only go if there's actually a virtual keycode
+        if virtual_keycode != None {
+          // connect with the keyboard struct
+          if state == ElementState::Pressed {
+            // key is pressed, run on_key_down
+            cpu.keyboard.on_key_down(virtual_keycode.unwrap());
+          }
+          else if state == ElementState::Released {
+            // key is released, run on_key_up
+            cpu.keyboard.on_key_up(virtual_keycode.unwrap());
+          }
         }
 
       }
