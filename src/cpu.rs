@@ -15,9 +15,9 @@ pub struct Cpu {
   // 16 8-bit registers
   pub v: [u8; 16],
   // address in memory
-  pub memory_addr: u16,
+  pub memory_addr: usize,
   // address in the program instructions
-  pub program_addr: u16,
+  pub program_addr: usize,
   // timers for keeping track of delay & sound length
   pub delay_timer: u16,
   pub sound_timer: u16,
@@ -44,14 +44,14 @@ impl Cpu {
     // create the memory
     let memory: [u8; 4096] = [0; 4096];
     let v: [u8; 16] = [0; 16];
-    let memory_addr: u16 = 0;
+    let memory_addr: usize = 0;
 
     // and the timers
     let delay_timer: u16 = 0;
     let sound_timer: u16 = 0;
 
     // address in the program
-    let program_addr: u16 = 0;
+    let program_addr: usize = 0;
 
     let stack: Vec<u16> = vec![];
 
@@ -111,6 +111,41 @@ impl Cpu {
       self.memory[0x200 + i] = byte;
 
     }
+
+  }
+
+  /**
+   * cycle runs 60 times per second, executing instructions
+   */
+  pub fn cycle(&mut self) {
+
+    // only run certain functions if the system is unpaused
+    if !self.paused {
+
+      // run however many instructions are specified in the speed variable
+      for i in 0..self.speed {
+
+          // figure out the operation we're running
+          let opcode = (self.memory[self.program_addr] as u16) << 8 | self.memory[self.program_addr + 1] as u16;
+
+      }
+
+      // update the timers
+      self.update_timers();
+
+    }
+
+    // cause a new render
+    // update the visual data and then render
+    self.display.update();
+    self.display.render();
+
+  }
+
+  /**
+   * If the timers are not equal to 0, lower their value by 1 per cycle
+   */
+  pub fn update_timers(&mut self) {
 
   }
 
