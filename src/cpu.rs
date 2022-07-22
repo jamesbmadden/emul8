@@ -19,8 +19,8 @@ pub struct Cpu {
   // address in the program instructions
   pub program_addr: usize,
   // timers for keeping track of delay & sound length
-  pub delay_timer: u16,
-  pub sound_timer: u16,
+  pub delay_timer: u8,
+  pub sound_timer: u8,
 
   // state for how the game is running
   pub paused: bool,
@@ -47,8 +47,8 @@ impl Cpu {
     let memory_addr: usize = 0;
 
     // and the timers
-    let delay_timer: u16 = 0;
-    let sound_timer: u16 = 0;
+    let delay_timer: u8 = 0;
+    let sound_timer: u8 = 0;
 
     // address in the program
     let program_addr: usize = 0x200;
@@ -291,102 +291,140 @@ impl Cpu {
           self.v[x] *= 2;
         },
 
-        // skip next instruction if v[x] DOESN'T equal v[y]
-        0x9000 => if self.v[x] != self.v[y] {
-          self.program_addr += 2;
-        },
+        // no other options
+        _ => ()
 
-        // set the i store (memory_addr) to the last 12 bits of the instruction
-        0xA000 => self.memory_addr = instruction as usize & 0xFFF,
+      },
 
-        // the program counter (program_addr) is set to the last 12 bits + v[0]
-        0xB000 => self.program_addr = (instruction as usize & 0xFFF) + self.v[0] as usize,
+      // skip next instruction if v[x] DOESN'T equal v[y]
+      0x9000 => if self.v[x] != self.v[y] {
+        self.program_addr += 2;
+      },
 
-        // a random number between 0 and 255 is generated and ANDed with kk, then stored in v[x]
-        // where 0xCxkk
-        0xC000 => {
-          let kk = (instruction & 0xFF) as u8;
-          let random: u8 = rand::random();
-          // now store it
-          self.v[x] = random & kk;
-        },
+      // set the i store (memory_addr) to the last 12 bits of the instruction
+      0xA000 => self.memory_addr = instruction as usize & 0xFFF,
 
-        // read sprite from memory at position i (memory_addr) for n bytes, rendering starting at x, y
-        // formatted as 0xDxyn
-        // the sprite XOR's onto the display, in simple words meaning it flips the state where the bit = 1
-        0xD000 => {
+      // the program counter (program_addr) is set to the last 12 bits + v[0]
+      0xB000 => self.program_addr = (instruction as usize & 0xFFF) + self.v[0] as usize,
 
-          // get the length of bytes, which is the last 4 bits in the instruction
-          let n = instruction as usize & 0xF;
-          // whether or not a pixel was turned off (that needs to be stored in memory later)
-          let mut turned_off = false;
+      // a random number between 0 and 255 is generated and ANDed with kk, then stored in v[x]
+      // where 0xCxkk
+      0xC000 => {
+        let kk = (instruction & 0xFF) as u8;
+        let random: u8 = rand::random();
+        // now store it
+        self.v[x] = random & kk;
+      },
 
-          // run through the bytes, which make up rows
-          for row in 0..n {
+      // read sprite from memory at position i (memory_addr) for n bytes, rendering starting at x, y
+      // formatted as 0xDxyn
+      // the sprite XOR's onto the display, in simple words meaning it flips the state where the bit = 1
+      0xD000 => {
 
-            // grab the byte
-            let byte = self.memory[self.memory_addr + row];
-            // and now each bit, which make up the columns
-            for col in 0..8 {
+        // get the length of bytes, which is the last 4 bits in the instruction
+        let n = instruction as usize & 0xF;
+        // whether or not a pixel was turned off (that needs to be stored in memory later)
+        let mut turned_off = false;
 
-              // the column we actually wanna look at first is 7, not 0, so we need to adjust
-              let pos = 7 - col;
+        // run through the bytes, which make up rows
+        for row in 0..n {
 
-              // isolate the specific bit using a bitwise operator
-              // this will return powers of two, which in binary, will appear as
-              // 0000 0001, 0000 0010, 0000 0100, etc, so when using the AND
-              // bitwise operator will isolate just that bit.
-              let bit_wanted = u8::pow(2, pos);
-              // isolate the bit!
-              // also shift it so it can only be either 1 or 0
-              let bit = (byte & bit_wanted) >> pos;
-              // now, if bit = 1, we can update the pixel
-              if bit == 1 {
-                // update turned_off to be true if a pixel was turned off,
-                // without overriding a possible previous positive
-                turned_off = turned_off || self.display.set_pixel(x as i32 + pos as i32, y as i32 + row as i32);
-              }
+          // grab the byte
+          let byte = self.memory[self.memory_addr + row];
+          // and now each bit, which make up the columns
+          for col in 0..8 {
 
+            // the column we actually wanna look at first is 7, not 0, so we need to adjust
+            let pos = 7 - col;
+
+            // isolate the specific bit using a bitwise operator
+            // this will return powers of two, which in binary, will appear as
+            // 0000 0001, 0000 0010, 0000 0100, etc, so when using the AND
+            // bitwise operator will isolate just that bit.
+            let bit_wanted = u8::pow(2, pos);
+            // isolate the bit!
+            // also shift it so it can only be either 1 or 0
+            let bit = (byte & bit_wanted) >> pos;
+            // now, if bit = 1, we can update the pixel
+            if bit == 1 {
+              // update turned_off to be true if a pixel was turned off,
+              // without overriding a possible previous positive
+              turned_off = turned_off || self.display.set_pixel(x as i32 + pos as i32, y as i32 + row as i32);
             }
 
           }
 
-          // finally, store whether a pixel was turned off in v[15]
-          self.v[15] = turned_off as u8;
+        }
+
+        // finally, store whether a pixel was turned off in v[15]
+        self.v[15] = turned_off as u8;
+
+      },
+
+      // there's two options here
+      0xE000 => match instruction & 0xFF {
+
+        // skip next instruction if key stored in v[x] is pressed
+        0x9E => if self.keyboard.is_key_pressed(self.v[x]) {
+          self.program_addr += 2;
+        },
+        // skip next instruction if key stored in v[x] ISN'T pressed
+        0xA1 => if !self.keyboard.is_key_pressed(self.v[x]) {
+          self.program_addr += 2;
+        }
+
+        // no other options
+        _ => ()
+
+      },
+
+      // there's nine options here
+      0xF000 => match instruction & 0xFF {
+
+        // put the value of the delay timer into v[x]
+        0x07 => self.v[x] = self.delay_timer,
+
+        // pause execution until a key is pressed
+        0x0A => {
+          // keyboard.rs handles this, simply just pause execution
+          self.keyboard.awaiting_keypress = true;
+        },
+
+        // set delay timer to v[x]
+        0x15 => self.delay_timer = self.v[x],
+
+        // set sound timer to v[x]
+        0x18 => self.sound_timer = self.v[x],
+
+        // add v[x] to i (memory_addr)
+        0x1E => self.memory_addr += self.v[x] as usize,
+
+        // i (memory_addr) is set to the address for the sprite x,
+        // which is v[x] * 5 since the sprites start from position 0 and
+        // sprites are 5 bytes long
+        0x29 => self.memory_addr = self.v[x] as usize * 5,
+
+        // store the decimal digits of v[x] in memory locations i, i+1, and i+2
+        0x33 => {
+          // hundreds digit
+          self.memory[self.memory_addr] = self.v[x] / 100;
+          // tens digit - first eliminate the ones digit then the hundreds
+          self.memory[self.memory_addr + 1] = (self.v[x] / 10) % 10;
+          // finally, the ones digit
+          self.memory[self.memory_addr + 2] = self.v[x] % 10;
+        },
+
+        // store v[0] through v[x] in memory, starting at memory_addr
+        0x55 => for i in 0..(x + 1) {
+
+          self.memory[self.memory_addr + i] = self.v[i];
 
         },
 
-        // there's two options here
-        0xE000 => match instruction & 0xFF {
+        // read v[0] through v[15] from memory, starting at memory_addr
+        0x65 => for i in 0..(x + 1) {
 
-          // skip next instruction if key stored in v[x] is pressed
-          0x9E => if self.keyboard.is_key_pressed(self.v[x]) {
-            self.program_addr += 2;
-          },
-          // skip next instruction if key stored in v[x] ISN'T pressed
-          0xA1 => if !self.keyboard.is_key_pressed(self.v[x]) {
-            self.program_addr += 2;
-          }
-
-          // no other options
-          _ => ()
-
-        },
-
-        // there's nine options here
-        0xF000 => match instruction & 0xFF {
-
-          // put the value of the delay timer into v[x]
-          0x07 => self.v[x] = self.delay_timer as u8,
-
-          // pause execution until a key is pressed
-          0x0A => {
-            // keyboard.rs handles this, simply just pause execution
-            self.keyboard.awaiting_keypress = true;
-          },
-
-          // no other options
-          _ => ()
+          self.v[i] = self.memory[self.memory_addr + i];
 
         },
 
@@ -396,7 +434,10 @@ impl Cpu {
       },
 
       // if any instruction is encountered that isn't yet implemented, give a todo
-      _ => todo!()
+      _ => {
+        println!("Instruction {} couldn't be processed", instruction);
+        todo!();
+      }
 
     }
 
