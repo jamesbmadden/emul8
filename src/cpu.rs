@@ -22,6 +22,10 @@ pub struct Cpu {
   pub delay_timer: u16,
   pub sound_timer: u16,
 
+  // state for how the game is running
+  pub paused: bool,
+  pub speed: u16,
+
   pub stack: Vec<u16>
 
 }
@@ -38,21 +42,70 @@ impl Cpu {
     let keyboard = Keyboard::new();
 
     // create the memory
-    let mut memory: [u8; 4096] = [0; 4096];
-    let mut v: [u8; 16] = [0; 16];
-    let mut memory_addr: u16 = 0;
+    let memory: [u8; 4096] = [0; 4096];
+    let v: [u8; 16] = [0; 16];
+    let memory_addr: u16 = 0;
 
     // and the timers
-    let mut delay_timer: u16 = 0;
-    let mut sound_timer: u16 = 0;
+    let delay_timer: u16 = 0;
+    let sound_timer: u16 = 0;
 
     // address in the program
-    let mut program_addr: u16 = 0;
+    let program_addr: u16 = 0;
 
-    let mut stack: Vec<u16> = vec![];
+    let stack: Vec<u16> = vec![];
+
+    // state for how the game is running
+    let speed: u16 = 10;
+    let paused = false;
 
 
-    return Cpu { display, keyboard, memory, memory_addr, program_addr, v, delay_timer, sound_timer, stack };
+    return Cpu { display, keyboard, memory, memory_addr, program_addr, v, delay_timer, sound_timer, stack, speed, paused };
+
+  }
+
+  /**
+   * chip-8 contains 16 sprites loaded into the interpreter part of the memory. This function loads them in
+   */
+  pub fn load_sprites_to_memory(&mut self) {
+
+    // create the definition of all the sprites
+    // each sprite is 5 bytes long
+    let sprites: [u8; 80] = [
+      0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+      0x20, 0x60, 0x20, 0x20, 0x70, // 1
+      0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+      0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+      0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+      0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+      0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+      0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+      0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+      0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+      0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+      0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+      0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+      0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+      0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+      0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+    ];
+
+    // load these into the system's memory
+    for (i, byte) in sprites.into_iter().enumerate() {
+
+      // move the sprite into the same spot in our general memory
+      self.memory[i] = byte;
+
+    }
+
+  }
+
+  /**
+   * Load the data from a ROM into the system's memory, starting from spot 0x200 as the spec defines
+   */
+  pub fn load_program_to_memory(&mut self) {
+
+
 
   }
 
