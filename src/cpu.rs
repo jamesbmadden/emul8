@@ -147,6 +147,14 @@ impl Cpu {
    */
   pub fn update_timers(&mut self) {
 
+    // if the delay timer is greater than 0, make it smaller :)
+    if self.delay_timer > 0 {
+      self.delay_timer -= 1;
+    }
+    if self.sound_timer > 0 {
+      self.sound_timer -= 1;
+    }
+
   }
 
 }
