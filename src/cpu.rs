@@ -103,9 +103,14 @@ impl Cpu {
   /**
    * Load the data from a ROM into the system's memory, starting from spot 0x200 as the spec defines
    */
-  pub fn load_program_to_memory(&mut self) {
+  pub fn load_program_to_memory(&mut self, bytes: Vec<u8>) {
 
+    // iterate over the bytes, and add them to memory, starting from 0x200
+    for (i, byte) in bytes.into_iter().enumerate() {
 
+      self.memory[0x200 + i] = byte;
+
+    }
 
   }
 
