@@ -22,9 +22,9 @@ async fn run() {
 
   // create an instance of the display for rendering 
   let mut cpu = cpu::Cpu::new(&window).await;
-  // set some pixels to true for testing
-  cpu.display.set_pixel(5, 21);
-  cpu.display.set_pixel(49, 3);
+  
+  // load the sprites into memory
+  cpu.load_sprites_to_memory();
 
   // load the ROM into storage
   let mut program_bytes: Vec<u8> = Vec::new();
