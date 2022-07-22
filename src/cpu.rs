@@ -119,22 +119,29 @@ impl Cpu {
    */
   pub fn cycle(&mut self) {
 
-    // only run certain functions if the system is unpaused
-    if !self.paused {
+    // run however many instructions are specified in the speed variable
+    for _i in 0..self.speed {
 
-      // run however many instructions are specified in the speed variable
-      for _i in 0..self.speed {
+      // only run certain functions if the system is unpaused
+      if !self.paused && !self.keyboard.awaiting_keypress {
 
-          // figure out the operation we're running
-          let instruction = (self.memory[self.program_addr] as u16) << 8 | self.memory[self.program_addr + 1] as u16;
-          // execute the instruction
-          self.execute_instruction(instruction);
+        // if we just resumed from a keyboard-awaiting pause, write that keypress down
+        if self.keyboard.handle_resume {
+          self.handle_resume();
+        }
 
+        // figure out the operation we're running
+        let instruction = (self.memory[self.program_addr] as u16) << 8 | self.memory[self.program_addr + 1] as u16;
+        // execute the instruction
+        self.execute_instruction(instruction);
       }
 
+    }
+
+    // only run if unpaused
+    if !self.paused && !self.keyboard.awaiting_keypress {
       // update the timers
       self.update_timers();
-
     }
 
     // cause a new render
@@ -156,6 +163,22 @@ impl Cpu {
     if self.sound_timer > 0 {
       self.sound_timer -= 1;
     }
+
+  }
+
+  /**
+   * When resuming from a wait for key, that key must be stored in the location specified in the instruction
+   */
+  pub fn handle_resume(&mut self) {
+
+    // find the instruction tht induced the pause
+    let instruction = (self.memory[self.program_addr] as u16) << 8 | self.memory[self.program_addr + 1] as u16;
+
+    // find the x position to store the last keypress
+    let x = ((instruction & 0x0F00) >> 8) as usize;
+
+    // finally, write the most recent keypress to v[x]
+    self.v[x] = self.keyboard.latest_key;
 
   }
 
@@ -306,19 +329,22 @@ impl Cpu {
             // and now each bit, which make up the columns
             for col in 0..8 {
 
+              // the column we actually wanna look at first is 7, not 0, so we need to adjust
+              let pos = 7 - col;
+
               // isolate the specific bit using a bitwise operator
               // this will return powers of two, which in binary, will appear as
               // 0000 0001, 0000 0010, 0000 0100, etc, so when using the AND
               // bitwise operator will isolate just that bit.
-              let bit_wanted = u8::pow(2, col);
+              let bit_wanted = u8::pow(2, pos);
               // isolate the bit!
               // also shift it so it can only be either 1 or 0
-              let bit = (byte & bit_wanted) >> col;
+              let bit = (byte & bit_wanted) >> pos;
               // now, if bit = 1, we can update the pixel
               if bit == 1 {
                 // update turned_off to be true if a pixel was turned off,
                 // without overriding a possible previous positive
-                turned_off = turned_off || self.display.set_pixel(x as i32, y as i32);
+                turned_off = turned_off || self.display.set_pixel(x as i32 + pos as i32, y as i32 + row as i32);
               }
 
             }
@@ -330,8 +356,42 @@ impl Cpu {
 
         },
 
+        // there's two options here
+        0xE000 => match instruction & 0xFF {
+
+          // skip next instruction if key stored in v[x] is pressed
+          0x9E => if self.keyboard.is_key_pressed(self.v[x]) {
+            self.program_addr += 2;
+          },
+          // skip next instruction if key stored in v[x] ISN'T pressed
+          0xA1 => if !self.keyboard.is_key_pressed(self.v[x]) {
+            self.program_addr += 2;
+          }
+
+          // no other options
+          _ => ()
+
+        },
+
+        // there's nine options here
+        0xF000 => match instruction & 0xFF {
+
+          // put the value of the delay timer into v[x]
+          0x07 => self.v[x] = self.delay_timer as u8,
+
+          // pause execution until a key is pressed
+          0x0A => {
+            // keyboard.rs handles this, simply just pause execution
+            self.keyboard.awaiting_keypress = true;
+          },
+
+          // no other options
+          _ => ()
+
+        },
+
         // no other options
-        _ => (),
+        _ => ()
 
       },
 
