@@ -34,6 +34,10 @@ async fn run() {
   // finally, pass the bytes to cpu to load into memory
   cpu.load_program_to_memory(program_bytes);
 
+  // run a cycle (for testing)
+  // this will need to move to a 60x per second loop soon
+  cpu.cycle();
+
   // open up the window!
   event_loop.run(move | event, _, control_flow | {
 
@@ -46,9 +50,7 @@ async fn run() {
       // render the window!
       Event::RedrawRequested(..) => {
 
-        // update the visual data and then render
-        cpu.display.update();
-        cpu.display.render();
+        // this will be fixed soon once a proper cycle is established
 
       },
 
