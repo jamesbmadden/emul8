@@ -8,7 +8,7 @@ use winit::{
   event_loop::{ControlFlow, EventLoop},
   window::WindowBuilder,
 };
-use std::{fs::File, io::Read};
+use std::{fs::File, io::Read, time::{Duration, Instant}};
 
 /**
  * wgpu and winit require asynchronous features to run, so using a seperate function
@@ -38,11 +38,27 @@ async fn run() {
   // this will need to move to a 60x per second loop soon
   cpu.cycle();
 
+  // keep track of timing so that a cpu cycle can be executed every 16.667 milliseconds
+  let mut prev_cycle = Instant::now();
+
   // open up the window!
   event_loop.run(move | event, _, control_flow | {
 
     // make sure window stays open until the close event
-    *control_flow = ControlFlow::Wait;
+    *control_flow = ControlFlow::Poll;
+
+    // If it's been a 60th of a second, run a cpu cycle
+    if Instant::now() > prev_cycle + Duration::from_micros(16667) {
+
+      // now that it's time for a new cycle, reset the previous cycle time
+      // this happens BEFORE the cycle so that the execution time of cycle doesn't affect
+      // how long it takes for a new frame
+      prev_cycle = Instant::now();
+
+      // actually run the cycle!
+      cpu.cycle();
+
+    }
 
     // handle events
     match event {
@@ -50,7 +66,8 @@ async fn run() {
       // render the window!
       Event::RedrawRequested(..) => {
 
-        // this will be fixed soon once a proper cycle is established
+        // a redraw means an event such as scaling, so a simple render (NOT a cycle!) will do
+        cpu.display.render();
 
       },
 
