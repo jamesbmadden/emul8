@@ -3,7 +3,7 @@ mod cpu;
 mod keyboard;
 
 use winit::{
-  event::{Event, WindowEvent},
+  event::{Event, WindowEvent, KeyboardInput, ElementState},
   dpi::LogicalSize,
   event_loop::{ControlFlow, EventLoop},
   window::WindowBuilder,
@@ -48,6 +48,27 @@ async fn run() {
         event: WindowEvent::CloseRequested,
         ..
       } => *control_flow = ControlFlow::Exit,
+
+      // key pressed or released!
+      Event::WindowEvent {
+        event: WindowEvent::KeyboardInput { 
+          input: KeyboardInput { state, virtual_keycode, .. }, 
+          .. 
+        },
+        ..
+      } => {
+
+        // connect with the keyboard struct
+        if state == ElementState::Pressed {
+          // key is pressed, run on_key_down
+          cpu.keyboard.on_key_down(virtual_keycode.unwrap());
+        }
+        else if state == ElementState::Released {
+          // key is released, run on_key_up
+          cpu.keyboard.on_key_up(virtual_keycode.unwrap());
+        }
+
+      }
 
       // catchall, do nothing
       _ => {}

@@ -2,12 +2,13 @@
  * This struct reads and interprets instructions, handling memory and connecting with
  * the display and audio outputs as well as the keyboard inputs
  */
-use crate::display::Display;
+use crate::{display::Display, keyboard::Keyboard};
 
 pub struct Cpu {
 
   // references to the structs that handle input/output
   pub display: Display,
+  pub keyboard: Keyboard,
 
   // 4096 bytes of memory, each byte as a u8
   pub memory: [u8; 4096],
@@ -34,6 +35,7 @@ impl Cpu {
 
     // create an instance of display
     let mut display = Display::new(window).await;
+    let mut keyboard = Keyboard::new();
 
     // create the memory
     let mut memory: [u8; 4096] = [0; 4096];
@@ -50,7 +52,7 @@ impl Cpu {
     let mut stack: Vec<u16> = vec![];
 
 
-    return Cpu { display, memory, memory_addr, program_addr, v, delay_timer, sound_timer, stack };
+    return Cpu { display, keyboard, memory, memory_addr, program_addr, v, delay_timer, sound_timer, stack };
 
   }
 
