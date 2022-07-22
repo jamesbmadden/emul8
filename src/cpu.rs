@@ -261,6 +261,74 @@ impl Cpu {
           self.v[15] = (self.v[y] > self.v[x]) as u8;
           self.v[x] = self.v[y] - self.v[x];
         },
+        // multiply v[x] by 2, and set v[15] to the most significant bit of v[x]
+        0xE => {
+          // if v[x] is >= 128, the 8th bit must be 1
+          self.v[15] = (self.v[x] >= 128) as u8;
+          self.v[x] *= 2;
+        },
+
+        // skip next instruction if v[x] DOESN'T equal v[y]
+        0x9000 => if self.v[x] != self.v[y] {
+          self.program_addr += 2;
+        },
+
+        // set the i store (memory_addr) to the last 12 bits of the instruction
+        0xA000 => self.memory_addr = instruction as usize & 0xFFF,
+
+        // the program counter (program_addr) is set to the last 12 bits + v[0]
+        0xB000 => self.program_addr = (instruction as usize & 0xFFF) + self.v[0] as usize,
+
+        // a random number between 0 and 255 is generated and ANDed with kk, then stored in v[x]
+        // where 0xCxkk
+        0xC000 => {
+          let kk = (instruction & 0xFF) as u8;
+          let random: u8 = rand::random();
+          // now store it
+          self.v[x] = random & kk;
+        },
+
+        // read sprite from memory at position i (memory_addr) for n bytes, rendering starting at x, y
+        // formatted as 0xDxyn
+        // the sprite XOR's onto the display, in simple words meaning it flips the state where the bit = 1
+        0xD000 => {
+
+          // get the length of bytes, which is the last 4 bits in the instruction
+          let n = instruction as usize & 0xF;
+          // whether or not a pixel was turned off (that needs to be stored in memory later)
+          let mut turned_off = false;
+
+          // run through the bytes, which make up rows
+          for row in 0..n {
+
+            // grab the byte
+            let byte = self.memory[self.memory_addr + row];
+            // and now each bit, which make up the columns
+            for col in 0..8 {
+
+              // isolate the specific bit using a bitwise operator
+              // this will return powers of two, which in binary, will appear as
+              // 0000 0001, 0000 0010, 0000 0100, etc, so when using the AND
+              // bitwise operator will isolate just that bit.
+              let bit_wanted = u8::pow(2, col);
+              // isolate the bit!
+              // also shift it so it can only be either 1 or 0
+              let bit = (byte & bit_wanted) >> col;
+              // now, if bit = 1, we can update the pixel
+              if bit == 1 {
+                // update turned_off to be true if a pixel was turned off,
+                // without overriding a possible previous positive
+                turned_off = turned_off || self.display.set_pixel(x as i32, y as i32);
+              }
+
+            }
+
+          }
+
+          // finally, store whether a pixel was turned off in v[15]
+          self.v[15] = turned_off as u8;
+
+        },
 
         // no other options
         _ => (),
