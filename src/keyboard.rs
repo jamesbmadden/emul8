@@ -8,7 +8,13 @@ pub struct Keyboard {
 
   // map of keys from wgpu to numbers for the instructions to process
   pub key_map: HashMap<VirtualKeyCode, u8>,
-  pub keys_down: HashSet<u8>
+  pub keys_down: HashSet<u8>,
+  // whether or not the execution is paused awaiting next key press
+  pub awaiting_keypress: bool,
+  // the most recent key press
+  pub latest_key: u8,
+  // finally, whether or not the cpu has to handle resumption
+  pub handle_resume: bool
 
 }
 
@@ -40,7 +46,12 @@ impl Keyboard {
     // the list of which keys are currently down
     let keys_down: HashSet<u8> = HashSet::new();
 
-    return Keyboard { key_map, keys_down };
+    // whether or not we're awaiting a key press before continuing
+    let awaiting_keypress = false;
+    let handle_resume = false;
+    let latest_key = 0;
+
+    return Keyboard { key_map, keys_down, awaiting_keypress, handle_resume, latest_key };
 
   }
 
@@ -67,6 +78,16 @@ impl Keyboard {
 
     // now add the pressed key to the pressed key set
     self.keys_down.insert(*key_code.unwrap());
+
+    // and set that to the latest key press
+    self.latest_key = *key_code.unwrap();
+
+    // check whether we need to resume execution of the cpu
+    if self.awaiting_keypress == true {
+      // set awaiting keypress to false and tell the cpu to process the resume
+      self.awaiting_keypress = false;
+      self.handle_resume = true;
+    }
 
   }
 
