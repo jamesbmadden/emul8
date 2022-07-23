@@ -3,7 +3,7 @@ mod cpu;
 mod keyboard;
 
 use winit::{
-  event::{Event, WindowEvent, KeyboardInput, ElementState},
+  event::{Event, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode},
   dpi::LogicalSize,
   event_loop::{ControlFlow, EventLoop},
   window::WindowBuilder,
@@ -90,6 +90,11 @@ async fn run() {
         if virtual_keycode != None {
           // connect with the keyboard struct
           if state == ElementState::Pressed {
+
+            // if the key is escape, pause or unpause the game
+            if virtual_keycode.unwrap() == VirtualKeyCode::Escape {
+              cpu.paused = !cpu.paused;
+            }
 
             // key is pressed, run on_key_down
             cpu.keyboard.on_key_down(virtual_keycode.unwrap());
