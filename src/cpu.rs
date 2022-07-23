@@ -346,9 +346,10 @@ impl Cpu {
               // set the end number to 1
               self.v[15] = 1;
 
-              // shift the byte over by one to the left to move the next column to first
-              byte = byte << 1;
             }
+
+            // shift the byte over by one to the left to move the next column to first
+            byte = byte << 1;
 
           }
 
