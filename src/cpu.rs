@@ -330,26 +330,17 @@ impl Cpu {
         for row in 0..n {
 
           // grab the byte
-          let byte = self.memory[self.memory_addr + row];
+          let mut byte = self.memory[self.memory_addr + row];
           // and now each bit, which make up the columns
           for col in 0..8 {
 
-            // the column we actually wanna look at first is 7, not 0, so we need to adjust
-            let pos = 7 - col;
+            // if the bit at the end is NOT zero, change the pixel!
+            if (byte & 0x80) > 0 {
+              // also keep track of whether a pixel was changed here
+              turned_off = turned_off || self.display.set_pixel(self.v[x] as i32 + col, self.v[y] as i32 + row as i32);
 
-            // isolate the specific bit using a bitwise operator
-            // this will return powers of two, which in binary, will appear as
-            // 0000 0001, 0000 0010, 0000 0100, etc, so when using the AND
-            // bitwise operator will isolate just that bit.
-            let bit_wanted = u8::pow(2, pos);
-            // isolate the bit!
-            // also shift it so it can only be either 1 or 0
-            let bit = (byte & bit_wanted) >> pos;
-            // now, if bit = 1, we can update the pixel
-            if bit == 1 {
-              // update turned_off to be true if a pixel was turned off,
-              // without overriding a possible previous positive
-              turned_off = turned_off || self.display.set_pixel(x as i32 + pos as i32, y as i32 + row as i32);
+              // shift the byte over by one to the left to move the next column to first
+              byte = byte << 1;
             }
 
           }
