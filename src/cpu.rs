@@ -328,10 +328,10 @@ impl Cpu {
         // get the length of bytes, which is the last 4 bits in the instruction
         let n = instruction as usize & 0xF;
         // whether or not a pixel was turned off (that needs to be stored in memory later)
-        let mut turned_off = false;
+        self.v[15] = 0;
 
         // run through the bytes, which make up rows
-        for row in 0..n {
+        for row in 0..(n + 1) {
 
           // grab the byte
           let mut byte = self.memory[self.memory_addr + row];
@@ -341,7 +341,10 @@ impl Cpu {
             // if the bit at the end is NOT zero, change the pixel!
             if (byte & 0x80) > 0 {
               // also keep track of whether a pixel was changed here
-              turned_off = turned_off || self.display.set_pixel(self.v[x] as i32 + col, self.v[y] as i32 + row as i32);
+              self.display.set_pixel(self.v[x] as i32 + col, self.v[y] as i32 + row as i32);
+
+              // set the end number to 1
+              self.v[15] = 1;
 
               // shift the byte over by one to the left to move the next column to first
               byte = byte << 1;
@@ -350,9 +353,6 @@ impl Cpu {
           }
 
         }
-
-        // finally, store whether a pixel was turned off in v[15]
-        self.v[15] = turned_off as u8;
 
       },
 
