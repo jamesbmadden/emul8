@@ -29,7 +29,7 @@ async fn run() {
   // load the ROM into storage
   let mut program_bytes: Vec<u8> = Vec::new();
   // open the file and grab the bytes into the program_bytes vector
-  let mut rom = File::open("roms/BLINKY").unwrap();
+  let mut rom = File::open("roms/pong.rom").unwrap();
   rom.read_to_end(&mut program_bytes).expect("Failed to load the rom, is it missing?");
   // finally, pass the bytes to cpu to load into memory
   cpu.load_program_to_memory(program_bytes);
