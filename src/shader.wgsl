@@ -16,11 +16,11 @@ fn vs_main(@location(0) vpos: vec2<f32>, @location(1) ipos: vec2<u32>, @location
 
   // the actual position of this pixel must be determined using instance position relative to the vertex position
   var xbase: f32 = f32(ipos[0]) / width * 2.0 - 1.0;
-  var ybase: f32 = f32(ipos[1]) / height * 2.0 - 1.0;
+  var ybase: f32 = (height - f32(ipos[1])) / height * 2.0 - 1.0;
 
   // and get the position including a vertex adjustment
   var x = xbase + vpos[0] * twidth;
-  var y = ybase + vpos[1] * theight;
+  var y = ybase - vpos[1] * theight;
 
   output.pos = vec4<f32>(x, y, 0.0, 1.0);
   output.on = on;
