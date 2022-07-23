@@ -122,7 +122,7 @@ impl Display {
       multiview: None
     });
 
-    let mut config = wgpu::SurfaceConfiguration {
+    let config = wgpu::SurfaceConfiguration {
       usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
       format: swapchain_format,
       width: size.width,
