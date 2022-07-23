@@ -196,14 +196,14 @@ impl Display {
     let uy: usize;
     if x < 0 {
       ux = (x + WIDTH as i32) as usize;
-    } else if x > WIDTH as i32 {
+    } else if x >= WIDTH as i32 {
       ux = (x - WIDTH as i32) as usize;
     } else {
       ux = x as usize;
     }
     if y < 0 {
       uy = (y + HEIGHT as i32) as usize;
-    } else if y > HEIGHT as i32 {
+    } else if y >= HEIGHT as i32 {
       uy = (y - HEIGHT as i32) as usize;
     } else {
       uy = y as usize;
