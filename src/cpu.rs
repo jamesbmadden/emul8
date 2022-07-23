@@ -331,7 +331,7 @@ impl Cpu {
         self.v[15] = 0;
 
         // run through the bytes, which make up rows
-        for row in 0..(n + 1) {
+        for row in 0..n {
 
           // grab the byte
           let mut byte = self.memory[self.memory_addr + row];
