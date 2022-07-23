@@ -243,7 +243,8 @@ impl Cpu {
       0x6000 => self.v[x] = (instruction & 0x00FF) as u8,
 
       // add the second byte to v[x]
-      0x7000 => self.v[x] += (instruction & 0x00FF) as u8,
+      // make sure it overflows gracefully using bitwise operators
+      0x7000 => self.v[x] = ((self.v[x] as u16 + (instruction & 0xFF)) & 0xFF) as u8,
 
 
       // 0x8000 series performs operations on the contents of the v store
@@ -270,8 +271,9 @@ impl Cpu {
         },
         // v[y] is subtracted from v[x]. v[15] = v[y] > v[x]
         0x5 => {
+          let difference = self.v[x] as i16 - self.v[y] as i16;
           self.v[15] = (self.v[x] > self.v[y]) as u8;
-          self.v[x] = self.v[x] - self.v[y];
+          self.v[x] = (difference & 0xFF) as u8;
         },
         // divide v[x] by 2, and set v[15] to the most significant bit of v[x]
         0x6 => {
@@ -281,14 +283,16 @@ impl Cpu {
         },
         // v[x] is subtracted from v[y]. v[15] = v[x] > v[y]
         0x7 => {
+          let difference = self.v[y] as i16 - self.v[x] as i16;
           self.v[15] = (self.v[y] > self.v[x]) as u8;
-          self.v[x] = self.v[y] - self.v[x];
+          self.v[x] = (difference & 0xFF) as u8;
         },
         // multiply v[x] by 2, and set v[15] to the most significant bit of v[x]
         0xE => {
+          let product = self.v[x] as u16 * 2;
           // if v[x] is >= 128, the 8th bit must be 1
           self.v[15] = (self.v[x] >= 128) as u8;
-          self.v[x] *= 2;
+          self.v[x] = (product & 0xFF) as u8;
         },
 
         // no other options
