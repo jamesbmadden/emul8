@@ -8,7 +8,8 @@ use winit::{
   event_loop::{ControlFlow, EventLoop},
   window::WindowBuilder,
 };
-use std::{time::{Duration, Instant}};
+use std::{time::{Duration}};
+use instant::Instant;
 
 use rfd::AsyncFileDialog;
 
