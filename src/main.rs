@@ -16,16 +16,12 @@ use rfd::AsyncFileDialog;
  * wgpu and winit require asynchronous features to run, so using a seperate function
  * makes most sense
  */
-async fn run() {
+async fn run(event_loop: EventLoop<()>, window: winit::window::Window) {
 
   // open a dialogue to find the rom
   let rom = AsyncFileDialog::new().pick_file().await;
   // and then read the file
   let program_bytes = rom.unwrap().read().await;
-
-  // define the window's properties
-  let event_loop = EventLoop::new();
-  let window = WindowBuilder::new().with_title("emul8 😏").with_inner_size(LogicalSize::new(600, 300)).build(&event_loop).unwrap();
 
   // create an instance of the display for rendering 
   let mut cpu = cpu::Cpu::new(&window).await;
@@ -120,14 +116,38 @@ async fn run() {
 
 }
 fn main() {
+
+  // define the window's properties
+  let event_loop = EventLoop::new();
+  let window = WindowBuilder::new().with_title("emul8 😏").with_inner_size(LogicalSize::new(600, 300)).build(&event_loop).unwrap();
   
-  // WASM needs a canvas created and appended, implement that when WASM support
-  // is implemented in the future
+  // WASM needs a canvas created and appended
   #[cfg(not(target_arch = "wasm32"))]
   {
     env_logger::init();
     // run the asynchronous run function until completion
-    pollster::block_on(run());
+    pollster::block_on(run(event_loop, window));
+  }
+  // here's where we run the web code
+  #[cfg(target_arch = "wasm32")]
+  {
+    // set the logger to web stuff
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    console_log::init().expect("Could not initialize logger");
+    // and now load the window
+    use winit::platform::web::WindowExtWebSys;
+    // on wasm, append the canvas to the document
+    web_sys::window()
+      .and_then(|win| win.document())
+      .and_then(|doc| doc.body())
+      .and_then(|body| {
+        body.append_child(&web_sys::Element::from(window.canvas()))
+            .ok()
+      })
+      .expect("Couldn't append canvas to the document body :/");
+
+    // finally, run the program!
+    wasm_bindgen_futures::spawn_local(run(event_loop, window));
   }
 
 }
