@@ -1,6 +1,6 @@
 struct VertexOutput {
   @builtin(position) pos: vec4<f32>,
-  @location(0) on: u32,
+  @location(0) @interpolate(flat) on: u32,
 };
 
 @vertex
