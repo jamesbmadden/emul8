@@ -1,1 +1,5 @@
 /target
+/web/emul8_bg.wasm
+/web/emul8_bg.wasm.d.ts
+/web/emul8.d.ts
+/web/emul8.js
